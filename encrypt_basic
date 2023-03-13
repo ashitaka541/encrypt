@@ -1,0 +1,91 @@
+import os
+import cryptography
+from cryptography.fernet import Fernet
+
+#greeting
+print(
+  "STOP!\n\nWho would cross the Bridge of Death must answer me these questions three.. \nere the otherside he see!\n"
+)
+
+
+#define search
+def search_all_files(root_dir, filename_contains):
+  matching_files = []
+  for dirpath, dirnames, filenames in os.walk(root_dir):
+    #  root_dir = "C:\\"  #for windows uncomment
+    for filename in filenames:
+      if filename_contains in filename:
+        matching_files.append(os.path.join(dirpath, filename))
+  if matching_files:
+    return matching_files
+
+
+  #define encrypt
+def encrypt_file(filename, key):
+  try:
+    with open(filename, 'rb') as file:
+      # Read the file content
+      file_content = file.read()
+
+      # Encrypt the content using the key
+      fernet = Fernet(key)
+      encrypted_content = fernet.encrypt(file_content)
+
+      # Save the encrypted content to a new file
+      encrypted_filename = "SuperSecretFile"
+      with open(encrypted_filename, 'wb') as encrypted_file:
+        encrypted_file.write(encrypted_content)
+
+      # Save the key to a file
+      with open('.magickey', 'wb') as key_file:
+        key_file.write(key)
+      print(
+        f"Abra codabra\n....\nand let's see!\n the magic you requested from me, be saved at\n{encrypted_filename}"
+      )
+  except FileNotFoundError:
+    print("File not found")
+
+
+#decrpyt
+def decrypt_file(filename, key):
+  try:
+    with open(filename, 'rb') as file:
+      # Read the encrypted content
+      encrypted_content = file.read()
+
+      # Decrypt the content using the key
+      fernet = Fernet(key)
+      decrypted_content = fernet.decrypt(encrypted_content)
+
+      # Save the decrypted content to a new file
+      decrypted_filename = ("SecretNoMore")
+      with open(decrypted_filename, 'wb') as decrypted_file:
+        decrypted_file.write(decrypted_content)
+      print(f"Yay!! it worked and was saved as {decrypted_filename}")
+  except FileNotFoundError:
+    print("Oh NO!!! I can't find the file you asked for. Please leave.")
+  except cryptography.fernet.InvalidToken:
+    print("If you are seeing this message it means you lied about the key")
+
+
+# Encrypt or decrypt
+operation = input("What is your quest?  To encrypt or decrypt (e/d)? ")
+filename_contains = input("Name the file... I dare ya... ")
+matching_files = search_all_files(os.getcwd(), filename_contains)
+if not matching_files:
+  print("No files found")
+elif len(matching_files) == 1:
+  if operation == 'e':
+    # Generate key
+    myKey = Fernet.generate_key()
+    encrypt_file(matching_files[0], myKey)
+  elif operation == 'd':
+    key_filename = input("Tell me, what is the magic key? ")
+    try:
+      with open(key_filename, 'rb') as key_file:
+        myKey = key_file.read()
+      decrypt_file(matching_files[0], myKey)
+    except FileNotFoundError:
+      print("Nope, next time try telling the truth. You see there is no file")
+  else:
+    print("ERROR SELF-DISTRUCT INITIATED")
